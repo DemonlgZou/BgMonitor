@@ -9,7 +9,7 @@ from django.shortcuts import render, HttpResponse
 import os, cv2, json,subprocess,datetime
 from DB_server.models import *
 from django.db.models.signals import  post_save
-import uuid,threading,os
+import uuid,threading,os,platform
 
 class CJsonEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -75,8 +75,11 @@ def upload_images(request):
 			User_id = Staff.objects.get(No=request.POST.get('user')) #获取用户ID值
 			#判断静态文件目录是否存在，不存在创建
 			if os.path.isdir(img_save_path) is False:
-				subprocess.run('md %s'%img_save_path,shell=True)   #dos 创建文件夹 md,unxi是 mkdir
+				if platform.system() == 'Windows':
+					subprocess.run('md %s'%img_save_path,shell=True)   #dos 创建文件夹 md,unxi是 mkdir
 			#接收前端发送来的图片
+				elif platform.system()=='Linux':
+					subprocess.run('mkdir %s' % img_save_path, shell=True)
 			f = open(os.path.join(img_save_path, obj_file.name), 'wb')
 			for chunk in obj_file.chunks():
 				f.write(chunk)
@@ -88,7 +91,10 @@ def upload_images(request):
 				b = Image.open(new_pic)
 				diff = ImageChops.difference(a,b)
 				if diff.getbbox() is None:
-					subprocess.run('del %s'%new_pic,shell=True)
+					if platform.system() == 'Windows':
+						subprocess.run('del %s' % new_pic, shell=True)
+					elif platform.system() == 'Linux':
+						subprocess.run('rm -rf %s' % img_save_path, shell=True)
 				else:
 					obj = IMages.objects.create(path=os.path.join(static_path, obj_file.name),
 												size=request.POST.get('file_size'),
@@ -155,6 +161,13 @@ def create_videos(request):
 			obj_host = Host.objects.filter(name=host,ip=ip).first()
 			obj_img = IMages.objects.filter(user_id=obj_user.id,host_id=obj_host.id).filter(create_at__range=(start,end))
 			videos_name = str(uuid.uuid1()).replace('-','')
+			if os.path.dirname(video_save_path) is False:
+				if platform.system() == 'Windows':
+					subprocess.run('md %s' % video_save_path, shell=True)
+
+				elif platform.system() == 'Linux':
+					subprocess.run('mkdir %s' % video_save_path, shell=True)
+
 			file_name = os.path.join(video_save_path, videos_name+'.mp4')
 			if obj_img :
 				Video.objects.create(user_id=obj_user.id,host_id=obj_host.id,stat='generated',start_at=start,end_at=end,video_path=file_name,url=videos_name)
