@@ -1,12 +1,8 @@
 from django.db import models
-from rest_framework import permissions
-from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models import Q ,F
-import json
 from rest_framework.authtoken.models import Token
-# Create your models here.
 
 class Staff(models.Model):
 	#记录员工信息内容
@@ -125,17 +121,19 @@ class Video(models.Model):
 
 
 class Mirror(models.Model):
+	#记录agent程序的最新使用pid信息
 	pid = models.SmallIntegerField(verbose_name='pid号')
 	started = models.DateTimeField(verbose_name='创建时间',auto_created=True,auto_now_add=True,null=True)
 	host = models.CharField(max_length=128,verbose_name='主机名')
 	ip = models.GenericIPAddressField(verbose_name='IP地址')
 	path = models.FilePathField(verbose_name='文件路径')
 	name = models.CharField(max_length=128,verbose_name='文件名')
+	c_img = models.FilePathField(verbose_name='客户机图片路径')
+	c_pid= models.FilePathField(verbose_name='客户机Pid路径')
 	class Meta:
 		db_table = 'ugw_pid'
 		verbose_name = '客户端pid信息'
 		verbose_name_plural = '客户端pid信息'
-
 
 class Logging(models.Model):
 	#记录操作日志相关信息
@@ -150,20 +148,4 @@ class Logging(models.Model):
 		verbose_name = '日志信息'
 		verbose_name_plural = '日志信息'
 
-# def images_list1(request):
-# 	print( request.POST.get('_search') )
-# 	if request.POST.get('_search') == 'true':
-# 		rule = json.loads(request.POST.get('filters')).get('groupOp')
-# 		#print(rule)
-# 		parms = json.loads(request.POST.get('filters')).get('rules')
-# 		#print(parms)
-# 		res = Q()
-# 		r_query = IMages.objects.get('%s')%t
-# 		if rule	 == 'AND':
-# 			for i in parms:
-# 				print(i)
-# 				if i.get('op') == 'eq':
-# 					rule_info = '%s=%s'%(i.get('field'),i.get('data'))
-
-#token = Token.objects.create(user_id=4)
 

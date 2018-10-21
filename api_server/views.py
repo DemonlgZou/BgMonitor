@@ -1,16 +1,10 @@
-from django.shortcuts import render,HttpResponse
-from DB_server.models import *
-from DB_server import form
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from django.core import  serializers
 from PIL import  Image,ImageChops
-from django.shortcuts import render, HttpResponse
-import os, cv2, json,subprocess,datetime
+from django.shortcuts import  HttpResponse
+import  cv2,subprocess,datetime
 from DB_server.models import *
-from django.db.models.signals import  post_save
 import uuid,threading,os,platform
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import  IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 
 class CJsonEncoder(json.JSONEncoder):
@@ -72,6 +66,7 @@ def upload_images(request):
 											 name=request.POST.get('file_name'),
 											 host=request.POST.get('host_name'),
 											 ip=request.POST.get('ip')).first()
+			#判断agent程序传来的pid是否存在，不存在则代表pid程序重新调用过，写入到数据库中
 			if pid_diff is None:
 				Mirror.objects.create(pid=request.POST.get('pid'), path=(request.POST.get('file_abs_path')),
 									  name=request.POST.get('file_name'),
@@ -94,6 +89,7 @@ def upload_images(request):
 			#接收前端发送来的图片
 				elif platform.system()=='Linux':
 					subprocess.run('mkdir %s' % img_save_path, shell=True)
+			#接收agent传来的图片
 			f = open(os.path.join(img_save_path, obj_file.name), 'wb')
 			for chunk in obj_file.chunks():
 				f.write(chunk)
@@ -172,6 +168,7 @@ def create_videos(request):
 			obj_host = Host.objects.filter(name=host,ip=ip).first()
 			obj_img = IMages.objects.filter(user_id=obj_user.id,host_id=obj_host.id).filter(create_at__range=(start,end))
 			videos_name = str(uuid.uuid1()).replace('-','')
+			#判断存放视频的路径是否存在不存在则创建
 			if os.path.dirname(video_save_path) is False:
 				if platform.system() == 'Windows':
 					subprocess.run('md %s' % video_save_path, shell=True)
