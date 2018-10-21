@@ -2,7 +2,7 @@ from django.shortcuts import render,HttpResponse
 from DB_server.models import *
 from DB_server import form
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-# Create your views here.
+
 from django.core import  serializers
 from PIL import  Image,ImageChops
 from django.shortcuts import render, HttpResponse
@@ -10,6 +10,8 @@ import os, cv2, json,subprocess,datetime
 from DB_server.models import *
 from django.db.models.signals import  post_save
 import uuid,threading,os,platform
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 
 class CJsonEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -51,10 +53,13 @@ def file2video(px,length,weidth,pic_list,videos_name):
 		vi.release()
 		Video.objects.filter(video_path=videos_name).update(stat='created',size=os.stat(videos_name).st_size)
 
+@api_view(['POST'])
+@permission_classes((IsAuthenticated, ))
 def upload_images(request):
 	#接收client主机上agent软件发送来的主机信息和图片
 	if request.method == 'POST':
 		obj_file = request.FILES.get('file')
+		#print(request.POST.get('file_name'),request.POST.get('pid'),request.POST.get('file_abs_path'))
 
 		#接收来自agent相关信息必要的参数如下，缺一均不会进行下步操作
 		if request.POST.get('os') and request.POST.get('ip') and \
@@ -63,6 +68,15 @@ def upload_images(request):
 			  and request.POST.get('width') and request.POST.get('file_size'):
 
 			info_created_time = request.POST.get('created_at')
+			pid_diff = Mirror.objects.filter(pid=request.POST.get('pid'), path=(request.POST.get('file_abs_path')),
+											 name=request.POST.get('file_name'),
+											 host=request.POST.get('host_name'),
+											 ip=request.POST.get('ip')).first()
+			if pid_diff is None:
+				Mirror.objects.create(pid=request.POST.get('pid'), path=(request.POST.get('file_abs_path')),
+									  name=request.POST.get('file_name'),
+									  host=request.POST.get('host_name'),
+									  ip=request.POST.get('ip'))
 			#通过接收前端信息去后台数据匹配员工和主机是否存在，不存在则写入到后台数据库，存在则进行下一步操作
 			obj1 = Staff.objects.filter(No=request.POST.get('user')).first()
 			if obj1 == None :
@@ -120,30 +134,27 @@ def image_list(request):
 	#向前端发送展示图片信息的接口文件
 	new_data = []
 	t = 1 #计数
+
 	Page = request.POST.get('page') if request.POST.get('page') else 1 #取前端传来的页面值，没传则为1
 	row = request.POST.get('rows') if request.POST.get('rows') else 10 #取前端传来的每页行数值，没传则为10
-	if request.POST.get('_search') == 'true':
-			pass
-
-	else:
-		obj = page(IMages.objects.all(),row,Page)
-		records = IMages.objects.count() #查询最大数据的条数
+	obj = page(IMages.objects.all(),row,Page)
+	records = IMages.objects.count() #查询最大数据的条数
 	#处理返回给前端的数据
-		for i in obj.get('data'):
-			if i != None:
-				#print(i)
-				No = i.user.No ##员工号
-				host = '%s+%s'%(i.host.name,i.host.ip)  #登陆主机
-				px = "%s*%s"%(i.length,i.width) #像素
-				name = i.name  #图片名
-				id = t    #id
-				created_at = str(i.create_at)  #生成时间
-				size = str(i.size) #图片大小
-				new_data.append({'id':id,"No":No,"host":host,"px":px,'created':created_at,"size":size,"name":name})
-				t +=1
-		obj.pop('data')
-		obj.update({'rows':new_data,'records':records})
-		return HttpResponse(json.dumps(obj), content_type="application/json")
+	for i in obj.get('data'):
+		if i != None:
+			#print(i)
+			No = i.user.No ##员工号
+			host = '%s+%s'%(i.host.name,i.host.ip)  #登陆主机
+			px = "%s*%s"%(i.length,i.width) #像素
+			name = i.name  #图片名
+			id = t    #id
+			created_at = str(i.create_at)  #生成时间
+			size = str(i.size) #图片大小
+			new_data.append({'id':i.id,"No":No,"host":host,"px":px,'created':created_at,"size":size,"name":name})
+			t +=1
+	obj.pop('data')
+	obj.update({'rows':new_data,'records':records})
+	return HttpResponse(json.dumps(obj), content_type="application/json")
 
 def create_videos(request):
 	#生成报告
@@ -202,7 +213,7 @@ def video_list(request):
 					start_time = str(i.start_at)
 					end_time = str(i.end_at)
 					create_name = str(i.create_name)
-					new_data_info={'id': nid, "No": No, "host": host,"create_name":create_name,
+					new_data_info={'id': i.id, "No": No, "host": host,"create_name":create_name,
 						 'created_time': created_at,"url": name,'start_time':start_time,"end_time":end_time}
 					if stat == 'created':
 						new_data_info.update({'size':size,'stat':'已生成'})
