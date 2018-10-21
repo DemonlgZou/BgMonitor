@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,HttpResponseRedirect
-import  json,datetime
+import datetime
 from django.contrib.auth import  login,logout,authenticate
 from DB_server.models import *
 
@@ -18,9 +18,16 @@ def auth(func):
     #负责做用户登陆认证的方法
     def inner(request,*args,**kwargs):
         request.session.clear_expired()
-        if   request.session.exists(request.COOKIES['sessionid']) is False:
+        try:
+            print (request.session.exists(request.COOKIES['sessionid']))
+            if   request.session.exists(request.COOKIES['sessionid']) is False:
+
+                return redirect('/web/login.html')
+            else:
+
+                return func (request,*args,**kwargs)
+        except KeyError:
             return redirect('/web/login.html')
-        return func (request,*args,**kwargs)
     return  inner
 
 
@@ -30,7 +37,6 @@ menu_list ={'top':top,'child':child}
 
 @auth
 def index(request):
-
     return render(request,'index.html',menu_list)
 
 @auth
@@ -87,3 +93,4 @@ def server_wrong(request):
 
 def logout_out(request):
     logout(request)
+    return render(request,'logout.html')

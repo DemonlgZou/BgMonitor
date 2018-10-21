@@ -130,7 +130,7 @@ def image_list(request):
 	#向前端发送展示图片信息的接口文件
 	new_data = []
 	t = 1 #计数
-
+	images_list(request)
 	Page = request.POST.get('page') if request.POST.get('page') else 1 #取前端传来的页面值，没传则为1
 	row = request.POST.get('rows') if request.POST.get('rows') else 10 #取前端传来的每页行数值，没传则为10
 	obj = page(IMages.objects.all(),row,Page)

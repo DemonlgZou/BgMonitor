@@ -281,7 +281,7 @@
                         <img class="nav-user-photo" src="/static/assets/avatars/user.jpg" alt="Jason's Photo"/>
                         <span class="user-info">
 									<small>欢迎光临,</small>
-									Jason
+									{{ request.user }}
 								</span>
 
                         <i class="icon-caret-down"></i>
@@ -304,8 +304,8 @@
 
                         <li class="divider"></li>
 
-                        <li id="logout" >
-                            <a href="#">
+                        <li id="logout ">
+                            <a href=" /web/logout.html/">
                                 <i class="icon-off"></i>
                                 退出
                             </a>
@@ -627,7 +627,7 @@
 
         function tooltip_placement(context, source) {
             var $source = $(source);
-            var $parent = $source.closest('.tab-content')
+            var $parent = $source.closest('.tab-content');
             var off1 = $parent.offset();
             var w1 = $parent.width();
 
@@ -674,9 +674,14 @@
         });
 
 
-    })
+    });
     function logout() {
+        $.ajax({
+            type:'get',
+            url:'/web/logout/'
 
+
+        })
     }
 </script>
 

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models import Q ,F
 from rest_framework.authtoken.models import Token
-
+import json
 class Staff(models.Model):
 	#记录员工信息内容
 	No = models.CharField(max_length=128, verbose_name='员工号', unique=True)
@@ -148,4 +148,18 @@ class Logging(models.Model):
 		verbose_name = '日志信息'
 		verbose_name_plural = '日志信息'
 
+
+def images_list(request):
+	if request.POST.get('_search') == 'true':
+		print((request.POST.get('filters')))
+		res = []
+		rules=(json.loads(request.POST.get('filters')))
+		print((rules).get('groupOp'))
+		info = rules.get('rules')
+		for i in info:
+			if i.get('op') == 'eq':
+				q1 = Q()
+				#q1.connector='AND'
+				q1.children.append(i.get('field'),i.get('data'))
+				res.append(q1)
 
