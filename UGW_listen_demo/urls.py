@@ -14,5 +14,5 @@ urlpatterns = [
     url(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 
 ]
-#handler404 = 'web_server.Views.views.page_not_found'
-#handler500 = 'web_server.Views.views.server_wrong'
+handler404 = 'web_server.Views.views.page_not_found'
+handler500 = 'web_server.Views.views.page_not_found'

@@ -1,7 +1,5 @@
-from django.views.static import serve
 from django.conf.urls import  url
 from web_server.Views import views
-from UGW_listen_demo import settings
 urlpatterns = [
     url(r'index.html/',views.index,name='index'),
     url(r'staff.html/',views.staff,name='staff_add'),
@@ -13,7 +11,7 @@ urlpatterns = [
     url(r'log.html/',views.logs,name='log_list'),
     url(r'login.html/',views.login_on,name='login'),
     url(r'logout.html/',views.logout_out,name='logout'),
-   # url(r'static/(?P<path>.*)$', serve, {"document_root": settings.STATIC_ROOT}),
+  
 
 
 ]

@@ -24,7 +24,7 @@ def auth(func):
 
                 return redirect('/web/login.html')
             else:
-
+                print(request.environ)
                 return func (request,*args,**kwargs)
         except KeyError:
             return redirect('/web/login.html')
@@ -70,17 +70,17 @@ def logs(request):
    return  render(request,'log.html',menu_list)
 
 def login_on(request):
-    if request.method == 'GET':
-        request.session['login_from'] = request.META.get('HTTP_REFERER', '/')
 
-    elif    request.method == 'POST':
+
+    if   request.method == 'POST':
             user1 = request.POST.get('username')
             pwd =request.POST.get('password')
-           # print(user1,pwd)
+            print(user1,pwd)
             user = authenticate(request,username=user1,password=pwd)
-            #print(user)
+            print(user)
             if user is not None:
                login(request,user)
+
                return HttpResponseRedirect('/web/index.html')
     return render(request,'login.html')
 
